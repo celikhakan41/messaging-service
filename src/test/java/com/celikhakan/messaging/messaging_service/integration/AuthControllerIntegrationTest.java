@@ -26,7 +26,8 @@ class AuthControllerIntegrationTest {
     @Test
     void shouldRegisterAndLoginSuccessfully() throws Exception {
         RegisterRequest register = new RegisterRequest();
-        register.setUsername("integrationUser");
+        String randomUsername = "integrationUser_" + System.currentTimeMillis();
+        register.setUsername(randomUsername);
         register.setPassword("pass123");
 
         mockMvc.perform(post("/api/auth/register")
@@ -36,7 +37,7 @@ class AuthControllerIntegrationTest {
                 .andExpect(jsonPath("$.token").exists());
 
         LoginRequest login = new LoginRequest();
-        login.setUsername("integrationUser");
+        login.setUsername(randomUsername);
         login.setPassword("pass123");
 
         mockMvc.perform(post("/api/auth/login")
