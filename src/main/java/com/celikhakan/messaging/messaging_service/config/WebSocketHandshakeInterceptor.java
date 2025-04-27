@@ -21,12 +21,10 @@ public class WebSocketHandshakeInterceptor implements HandshakeInterceptor {
     @Override
     public boolean beforeHandshake(ServerHttpRequest request, ServerHttpResponse response,
                                    WebSocketHandler handler, Map<String, Object> attributes) {
-        HttpServletRequest servletRequest = ((ServletServerHttpRequest) request).getServletRequest();
-        String authHeader = servletRequest.getHeader("Authorization");
+        if (request instanceof ServletServerHttpRequest servletRequest) {
+            String token = servletRequest.getServletRequest().getParameter("token");
 
-        if (authHeader != null && authHeader.startsWith("Bearer ")) {
-            String token = authHeader.substring(7);
-            if (jwtService.validateToken(token)) {
+            if (token != null && jwtService.validateToken(token)) {
                 String username = jwtService.extractUsername(token);
                 attributes.put("username", username);
                 return true;
