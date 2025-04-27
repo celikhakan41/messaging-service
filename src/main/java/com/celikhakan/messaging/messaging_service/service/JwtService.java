@@ -13,9 +13,10 @@ public class JwtService {
     private static final long EXPIRATION_MS = 86400000; // 1 day
     private final Key key = Keys.secretKeyFor(SignatureAlgorithm.HS256);
 
-    public String generateToken(String username) {
+    public String generateToken(String username, String tenantId) {
         return Jwts.builder()
                 .setSubject(username)
+                .claim("tenantId", tenantId)
                 .setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis() + EXPIRATION_MS))
                 .signWith(key)
@@ -36,5 +37,12 @@ public class JwtService {
         } catch (JwtException e) {
             return false;
         }
+    }
+
+    public String extractTenantId(String token) {
+        return Jwts.parserBuilder().setSigningKey(key).build()
+                .parseClaimsJws(token)
+                .getBody()
+                .get("tenantId", String.class);
     }
 }

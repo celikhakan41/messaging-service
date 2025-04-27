@@ -1,7 +1,6 @@
 package com.celikhakan.messaging.messaging_service.config;
 
 import com.celikhakan.messaging.messaging_service.service.JwtService;
-import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.server.ServerHttpRequest;
 import org.springframework.http.server.ServerHttpResponse;
 import org.springframework.http.server.ServletServerHttpRequest;
@@ -26,7 +25,9 @@ public class WebSocketHandshakeInterceptor implements HandshakeInterceptor {
 
             if (token != null && jwtService.validateToken(token)) {
                 String username = jwtService.extractUsername(token);
+                String tenantId = jwtService.extractTenantId(token);
                 attributes.put("username", username);
+                attributes.put("tenantId", tenantId);
                 return true;
             }
         }

@@ -3,6 +3,7 @@ package com.celikhakan.messaging.messaging_service.service;
 import com.celikhakan.messaging.messaging_service.dto.MessageResponse;
 import com.celikhakan.messaging.messaging_service.dto.SendMessageRequest;
 import com.celikhakan.messaging.messaging_service.model.Message;
+import com.celikhakan.messaging.messaging_service.model.User;
 import com.celikhakan.messaging.messaging_service.repository.MessageRepository;
 import com.celikhakan.messaging.messaging_service.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -37,7 +38,13 @@ class MessageServiceTest {
         request.setTo("receiver");
         request.setContent("Hello!");
 
+        User senderUser = User.builder()
+                .username("sender")
+                .tenantId("tenant1")
+                .build();
+
         when(userRepository.existsByUsername("receiver")).thenReturn(true);
+        when(userRepository.findByUsername("sender")).thenReturn(java.util.Optional.of(senderUser));
 
         MessageResponse response = messageService.sendMessage(request, "sender");
 

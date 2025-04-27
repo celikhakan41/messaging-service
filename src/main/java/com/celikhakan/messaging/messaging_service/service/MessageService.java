@@ -3,6 +3,7 @@ package com.celikhakan.messaging.messaging_service.service;
 import com.celikhakan.messaging.messaging_service.dto.MessageResponse;
 import com.celikhakan.messaging.messaging_service.dto.SendMessageRequest;
 import com.celikhakan.messaging.messaging_service.model.Message;
+import com.celikhakan.messaging.messaging_service.model.User;
 import com.celikhakan.messaging.messaging_service.repository.MessageRepository;
 import com.celikhakan.messaging.messaging_service.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -18,40 +19,25 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class MessageService {
 
+    private static final Logger logger = LoggerFactory.getLogger(MessageService.class);
+
     private final MessageRepository messageRepository;
     private final UserRepository userRepository;
 
-    private static final Logger logger = LoggerFactory.getLogger(MessageService.class);
-
     public MessageResponse sendMessage(SendMessageRequest request, String sender) {
-        if (!userRepository.existsByUsername(request.getTo())) {
-            logger.warn("Message not sent. Receiver '{}' does not exist.", request.getTo());
-            throw new RuntimeException("Receiver user does not exist");
-        }
+        validateReceiverExists(request.getTo());
+        User senderUser = getUserByUsername(sender);
 
-        Message message = Message.builder()
-                .sender(sender)
-                .receiver(request.getTo())
-                .content(request.getContent())
-                .timestamp(LocalDateTime.now())
-                .build();
-
+        Message message = buildMessage(request, sender, senderUser.getTenantId());
         messageRepository.save(message);
+
         logger.info("{} sent message to {}: {}", sender, request.getTo(), request.getContent());
 
-        return MessageResponse.builder()
-                .from(sender)
-                .to(request.getTo())
-                .content(request.getContent())
-                .timestamp(message.getTimestamp())
-                .build();
+        return buildMessageResponse(message);
     }
 
     public List<MessageResponse> getConversation(String username, String currentUser) {
-        if (!userRepository.existsByUsername(username)) {
-            logger.warn("Conversation fetch failed. User '{}' does not exist.", username);
-            throw new RuntimeException("The user you want to talk to does not exist");
-        }
+        validateReceiverExists(username);
 
         List<Message> messages = messageRepository.findBySenderAndReceiverOrReceiverAndSenderOrderByTimestampAsc(
                 currentUser, username, username, currentUser
@@ -60,12 +46,41 @@ public class MessageService {
         logger.info("{} retrieved conversation with {}", currentUser, username);
 
         return messages.stream()
-                .map(msg -> MessageResponse.builder()
-                        .from(msg.getSender())
-                        .to(msg.getReceiver())
-                        .content(msg.getContent())
-                        .timestamp(msg.getTimestamp())
-                        .build())
+                .map(this::buildMessageResponse)
                 .collect(Collectors.toList());
+    }
+
+    private void validateReceiverExists(String username) {
+        if (!userRepository.existsByUsername(username)) {
+            logger.warn("User '{}' does not exist.", username);
+            throw new RuntimeException("User does not exist");
+        }
+    }
+
+    private User getUserByUsername(String username) {
+        return userRepository.findByUsername(username)
+                .orElseThrow(() -> {
+                    logger.warn("User '{}' not found.", username);
+                    return new RuntimeException("User not found");
+                });
+    }
+
+    private Message buildMessage(SendMessageRequest request, String sender, String tenantId) {
+        return Message.builder()
+                .sender(sender)
+                .receiver(request.getTo())
+                .content(request.getContent())
+                .tenantId(tenantId)
+                .timestamp(LocalDateTime.now())
+                .build();
+    }
+
+    private MessageResponse buildMessageResponse(Message message) {
+        return MessageResponse.builder()
+                .from(message.getSender())
+                .to(message.getReceiver())
+                .content(message.getContent())
+                .timestamp(message.getTimestamp())
+                .build();
     }
 }

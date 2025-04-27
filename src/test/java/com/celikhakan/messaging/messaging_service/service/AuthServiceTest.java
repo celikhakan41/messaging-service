@@ -40,9 +40,9 @@ class AuthServiceTest {
         request.setUsername("hakan");
         request.setPassword("1234");
 
-        when(userRepository.existsByUsername("hakan")).thenReturn(false);
-        when(passwordEncoder.encode("1234")).thenReturn("encoded-password");
-        when(jwtService.generateToken("hakan")).thenReturn("mock-jwt");
+        when(userRepository.existsByUsername(eq("hakan"))).thenReturn(false);
+        when(passwordEncoder.encode(eq("1234"))).thenReturn("encoded-password");
+        when(jwtService.generateToken(eq("hakan"), anyString())).thenReturn("mock-jwt");
 
         AuthResponse response = authService.register(request);
 
@@ -71,12 +71,13 @@ class AuthServiceTest {
         User user = User.builder()
                 .username("user")
                 .password("encoded-secret")
+                .tenantId("tenant1")
                 .createdAt(LocalDateTime.now())
                 .build();
 
         when(userRepository.findByUsername("user")).thenReturn(Optional.of(user));
         when(passwordEncoder.matches("secret", "encoded-secret")).thenReturn(true);
-        when(jwtService.generateToken("user")).thenReturn("mock-jwt");
+        when(jwtService.generateToken("user", "tenant1")).thenReturn("mock-jwt");
 
         AuthResponse response = authService.login(request);
         assertEquals("mock-jwt", response.getToken());

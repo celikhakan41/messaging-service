@@ -29,6 +29,7 @@ public class KafkaConsumerService {
                     .sender(dto.getSender())
                     .receiver(dto.getReceiver())
                     .content(dto.getContent())
+                    .tenantId(dto.getTenantId())
                     .timestamp(LocalDateTime.now())
                     .build();
 
