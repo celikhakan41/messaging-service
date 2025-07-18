@@ -19,5 +19,6 @@ public class User {
     private String username;
     private String password;
     private String tenantId;
+    private PlanType planType;
     private LocalDateTime createdAt;
 }

@@ -3,6 +3,7 @@ package com.celikhakan.messaging.messaging_service.service;
 import com.celikhakan.messaging.messaging_service.dto.AuthResponse;
 import com.celikhakan.messaging.messaging_service.dto.LoginRequest;
 import com.celikhakan.messaging.messaging_service.dto.RegisterRequest;
+import com.celikhakan.messaging.messaging_service.model.PlanType;
 import com.celikhakan.messaging.messaging_service.model.User;
 import com.celikhakan.messaging.messaging_service.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -35,12 +36,13 @@ public class AuthService {
                 .username(request.getUsername())
                 .password(passwordEncoder.encode(request.getPassword()))
                 .tenantId(UUID.randomUUID().toString())
+                .planType(request.getPlanType() == null ? PlanType.FREE : request.getPlanType())
                 .createdAt(LocalDateTime.now())
                 .build();
 
         userRepository.save(user);
         logger.info("User registered: {}", user.getUsername());
-        String token = jwtService.generateToken(user.getUsername(), user.getTenantId());
+        String token = jwtService.generateToken(user.getUsername(), user.getTenantId(), user.getPlanType());
         return new AuthResponse(token);
     }
 
@@ -56,7 +58,7 @@ public class AuthService {
             throw new RuntimeException("Invalid credentials");
         }
 
-        String token = jwtService.generateToken(user.getUsername(), user.getTenantId());
+        String token = jwtService.generateToken(user.getUsername(), user.getTenantId(), user.getPlanType());
         return new AuthResponse(token);
     }
 }

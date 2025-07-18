@@ -1,8 +1,7 @@
 package com.celikhakan.messaging.messaging_service.service;
 
 import com.celikhakan.messaging.messaging_service.dto.ChatMessageDTO;
-import com.celikhakan.messaging.messaging_service.model.Message;
-import com.celikhakan.messaging.messaging_service.repository.MessageRepository;
+import com.celikhakan.messaging.messaging_service.dto.SendMessageRequest;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
@@ -10,14 +9,12 @@ import org.slf4j.LoggerFactory;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
-
 @Service
 @RequiredArgsConstructor
 public class KafkaConsumerService {
 
     private static final Logger logger = LoggerFactory.getLogger(KafkaConsumerService.class);
-    private final MessageRepository messageRepository;
+    private final MessageService messageService;
 
     @KafkaListener(topics = "chat-messages", groupId = "chat-group")
     public void listen(String json) {
@@ -25,15 +22,11 @@ public class KafkaConsumerService {
             ChatMessageDTO dto = new ObjectMapper().readValue(json, ChatMessageDTO.class);
             logger.info("Kafka message received: {}", dto);
 
-            Message message = Message.builder()
-                    .sender(dto.getSender())
-                    .receiver(dto.getReceiver())
-                    .content(dto.getContent())
-                    .tenantId(dto.getTenantId())
-                    .timestamp(LocalDateTime.now())
-                    .build();
+            SendMessageRequest request = new SendMessageRequest();
+            request.setTo(dto.getReceiver());
+            request.setContent(dto.getContent());
 
-            messageRepository.save(message);
+            messageService.sendMessage(request, dto.getSender());
         } catch (Exception e) {
             logger.error("Error while processing message: {}", e.getMessage());
         }

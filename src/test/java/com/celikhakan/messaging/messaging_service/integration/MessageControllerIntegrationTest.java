@@ -3,6 +3,7 @@ package com.celikhakan.messaging.messaging_service.integration;
 import com.celikhakan.messaging.messaging_service.dto.LoginRequest;
 import com.celikhakan.messaging.messaging_service.dto.RegisterRequest;
 import com.celikhakan.messaging.messaging_service.dto.SendMessageRequest;
+import com.celikhakan.messaging.messaging_service.model.PlanType;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,38 +27,53 @@ class MessageControllerIntegrationTest {
     private ObjectMapper objectMapper;
 
     static String token;
+    static String senderUsername;
+    static String receiverUsername;
+
+    @BeforeAll
+    static void setupUsernames() {
+        senderUsername = "sender_" + System.currentTimeMillis();
+        receiverUsername = "receiver_" + System.currentTimeMillis();
+    }
 
     @Test
     @Order(1)
     void shouldRegisterSenderAndReceiver() throws Exception {
         RegisterRequest sender = new RegisterRequest();
-        sender.setUsername("sender");
+        sender.setUsername(senderUsername);
         sender.setPassword("123");
+        sender.setPlanType(PlanType.FREE);
 
         RegisterRequest receiver = new RegisterRequest();
-        receiver.setUsername("receiver");
+        receiver.setUsername(receiverUsername);
         receiver.setPassword("123");
+        receiver.setPlanType(PlanType.FREE);
 
         mockMvc.perform(post("/api/auth/register")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(sender)));
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(sender)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.token").exists());
 
         mockMvc.perform(post("/api/auth/register")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(receiver)));
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(receiver)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.token").exists());
     }
 
     @Test
     @Order(2)
     void shouldLoginAndGetToken() throws Exception {
         LoginRequest login = new LoginRequest();
-        login.setUsername("sender");
+        login.setUsername(senderUsername);
         login.setPassword("123");
 
         MvcResult result = mockMvc.perform(post("/api/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(login)))
                 .andExpect(status().isOk())
+                .andExpect(jsonPath("$.token").exists())
                 .andReturn();
 
         String responseBody = result.getResponse().getContentAsString();
@@ -68,7 +84,7 @@ class MessageControllerIntegrationTest {
     @Order(3)
     void shouldSendMessage() throws Exception {
         SendMessageRequest request = new SendMessageRequest();
-        request.setTo("receiver");
+        request.setTo(receiverUsername);
         request.setContent("Hello integration test!");
 
         mockMvc.perform(post("/api/messages/send")
@@ -82,9 +98,9 @@ class MessageControllerIntegrationTest {
     @Test
     @Order(4)
     void shouldGetMessageHistory() throws Exception {
-        mockMvc.perform(get("/api/messages/history?with=receiver")
+        mockMvc.perform(get("/api/messages/history?with=" + receiverUsername)
                         .header("Authorization", "Bearer " + token))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].to").value("receiver"));
+                .andExpect(jsonPath("$[0].to").value(receiverUsername));
     }
 }

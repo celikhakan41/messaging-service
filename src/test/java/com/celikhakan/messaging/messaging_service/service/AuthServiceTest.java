@@ -3,6 +3,7 @@ package com.celikhakan.messaging.messaging_service.service;
 import com.celikhakan.messaging.messaging_service.dto.AuthResponse;
 import com.celikhakan.messaging.messaging_service.dto.LoginRequest;
 import com.celikhakan.messaging.messaging_service.dto.RegisterRequest;
+import com.celikhakan.messaging.messaging_service.model.PlanType;
 import com.celikhakan.messaging.messaging_service.model.User;
 import com.celikhakan.messaging.messaging_service.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -42,7 +43,11 @@ class AuthServiceTest {
 
         when(userRepository.existsByUsername(eq("hakan"))).thenReturn(false);
         when(passwordEncoder.encode(eq("1234"))).thenReturn("encoded-password");
-        when(jwtService.generateToken(eq("hakan"), anyString())).thenReturn("mock-jwt");
+        when(jwtService.generateToken(
+                eq("hakan"),anyString(),
+                eq(PlanType.FREE)))
+                .thenReturn("mock-jwt");
+
 
         AuthResponse response = authService.register(request);
 
@@ -72,12 +77,17 @@ class AuthServiceTest {
                 .username("user")
                 .password("encoded-secret")
                 .tenantId("tenant1")
+                .planType(PlanType.FREE)
                 .createdAt(LocalDateTime.now())
                 .build();
 
         when(userRepository.findByUsername("user")).thenReturn(Optional.of(user));
         when(passwordEncoder.matches("secret", "encoded-secret")).thenReturn(true);
-        when(jwtService.generateToken("user", "tenant1")).thenReturn("mock-jwt");
+        when(jwtService.generateToken(
+                eq("user"),
+                eq("tenant1"),
+                eq(PlanType.FREE)))
+                .thenReturn("mock-jwt");
 
         AuthResponse response = authService.login(request);
         assertEquals("mock-jwt", response.getToken());
@@ -91,7 +101,10 @@ class AuthServiceTest {
 
         User user = User.builder()
                 .username("user")
-                .password("encoded-password")
+                .password("encoded-secret")
+                .tenantId("tenant1")
+                .planType(PlanType.FREE)
+                .createdAt(LocalDateTime.now())
                 .build();
 
         when(userRepository.findByUsername("user")).thenReturn(Optional.of(user));

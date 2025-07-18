@@ -2,6 +2,7 @@ package com.celikhakan.messaging.messaging_service.integration;
 
 import com.celikhakan.messaging.messaging_service.dto.LoginRequest;
 import com.celikhakan.messaging.messaging_service.dto.RegisterRequest;
+import com.celikhakan.messaging.messaging_service.model.PlanType;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,6 +30,7 @@ class AuthControllerIntegrationTest {
         String randomUsername = "integrationUser_" + System.currentTimeMillis();
         register.setUsername(randomUsername);
         register.setPassword("pass123");
+        register.setPlanType(PlanType.FREE);
 
         mockMvc.perform(post("/api/auth/register")
                         .contentType(MediaType.APPLICATION_JSON)

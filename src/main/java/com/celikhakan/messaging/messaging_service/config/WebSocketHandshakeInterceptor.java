@@ -26,8 +26,10 @@ public class WebSocketHandshakeInterceptor implements HandshakeInterceptor {
             if (token != null && jwtService.validateToken(token)) {
                 String username = jwtService.extractUsername(token);
                 String tenantId = jwtService.extractTenantId(token);
+                String planType = jwtService.extractPlanType(token);
                 attributes.put("username", username);
                 attributes.put("tenantId", tenantId);
+                attributes.put("planType", planType);
                 return true;
             }
         }

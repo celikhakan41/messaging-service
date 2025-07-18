@@ -3,6 +3,7 @@ package com.celikhakan.messaging.messaging_service.service;
 import com.celikhakan.messaging.messaging_service.dto.MessageResponse;
 import com.celikhakan.messaging.messaging_service.dto.SendMessageRequest;
 import com.celikhakan.messaging.messaging_service.model.Message;
+import com.celikhakan.messaging.messaging_service.model.PlanType;
 import com.celikhakan.messaging.messaging_service.model.User;
 import com.celikhakan.messaging.messaging_service.repository.MessageRepository;
 import com.celikhakan.messaging.messaging_service.repository.UserRepository;
@@ -11,6 +12,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
+import java.time.Clock;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -20,6 +23,7 @@ import java.util.stream.Collectors;
 public class MessageService {
 
     private static final Logger logger = LoggerFactory.getLogger(MessageService.class);
+    private static final Clock CLOCK = Clock.systemUTC();
 
     private final MessageRepository messageRepository;
     private final UserRepository userRepository;
@@ -28,9 +32,21 @@ public class MessageService {
         validateReceiverExists(request.getTo());
         User senderUser = getUserByUsername(sender);
 
+        if (PlanType.FREE.equals(senderUser.getPlanType())) {
+            long todayMessageCount = messageRepository.countBySenderAndTimestampBetween(
+                    sender,
+                    LocalDate.now(CLOCK).atStartOfDay(),
+                    LocalDateTime.now(CLOCK)
+            );
+            PlanType planType = senderUser.getPlanType();
+            if (todayMessageCount >= planType.getDailyMessageLimit()) {
+                logger.warn("User '{}' has exceeded daily free plan message limit.", sender);
+                throw new RuntimeException("Daily message limit exceeded for FREE plan.");
+            }
+        }
+
         Message message = buildMessage(request, sender, senderUser.getTenantId());
         messageRepository.save(message);
-
         logger.info("{} sent message to {}: {}", sender, request.getTo(), request.getContent());
 
         return buildMessageResponse(message);
@@ -71,7 +87,7 @@ public class MessageService {
                 .receiver(request.getTo())
                 .content(request.getContent())
                 .tenantId(tenantId)
-                .timestamp(LocalDateTime.now())
+                .timestamp(LocalDateTime.now(CLOCK))
                 .build();
     }
 
