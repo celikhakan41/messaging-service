@@ -3,6 +3,7 @@ package com.celikhakan.messaging.messaging_service.config;
 import com.celikhakan.messaging.messaging_service.service.JwtService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import com.celikhakan.messaging.messaging_service.filter.ApiKeyAuthFilter;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -14,9 +15,11 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 public class SecurityConfig {
 
     private final JwtService jwtService;
+    private final ApiKeyAuthFilter apiKeyAuthFilter;
 
-    public SecurityConfig(JwtService jwtService) {
+    public SecurityConfig(JwtService jwtService, ApiKeyAuthFilter apiKeyAuthFilter) {
         this.jwtService = jwtService;
+        this.apiKeyAuthFilter = apiKeyAuthFilter;
     }
 
 
@@ -29,6 +32,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/auth/**", "/ws/**", "/ws/info/**").permitAll()
                         .anyRequest().authenticated()
                 )
+                .addFilterBefore(apiKeyAuthFilter, JwtAuthFilter.class)
                 .addFilterBefore(new JwtAuthFilter(jwtService), UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
