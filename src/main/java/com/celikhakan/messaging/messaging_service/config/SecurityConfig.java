@@ -6,6 +6,7 @@ import org.springframework.context.annotation.Configuration;
 import com.celikhakan.messaging.messaging_service.filter.ApiKeyAuthFilter;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
@@ -27,12 +28,14 @@ public class SecurityConfig {
         http
                 .cors(Customizer.withDefaults())
                 .csrf(csrf -> csrf.disable())
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/auth/**", "/ws/**", "/ws/info/**").permitAll()
+                        .requestMatchers("/api/auth/**", "/api/debug/**", "/ws/**", "/ws/info/**").permitAll()
                         .anyRequest().authenticated()
                 )
-                .addFilterBefore(apiKeyAuthFilter, UsernamePasswordAuthenticationFilter.class)
-                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
+                // JWT filter'ı önce çalıştır, sonra API Key filter'ı
+                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
+                .addFilterAfter(apiKeyAuthFilter, JwtAuthFilter.class);
 
         return http.build();
     }
