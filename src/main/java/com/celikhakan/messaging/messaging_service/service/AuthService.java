@@ -10,6 +10,7 @@ import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import com.celikhakan.messaging.messaging_service.service.TenantService;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -25,6 +26,7 @@ public class AuthService {
     private final UserRepository userRepository;
     private final JwtService jwtService;
     private final PasswordEncoder passwordEncoder;
+    private final TenantService tenantService;
 
     public AuthResponse register(RegisterRequest request) {
         if (userRepository.existsByUsername(request.getUsername())) {
@@ -32,11 +34,13 @@ public class AuthService {
             throw new RuntimeException("Username already exists");
         }
 
+        PlanType plan = request.getPlanType() == null ? PlanType.FREE : request.getPlanType();
+        String tenantId = tenantService.createTenant(plan).getId();
         User user = User.builder()
                 .username(request.getUsername())
                 .password(passwordEncoder.encode(request.getPassword()))
-                .tenantId(UUID.randomUUID().toString())
-                .planType(request.getPlanType() == null ? PlanType.FREE : request.getPlanType())
+                .tenantId(tenantId)
+                .planType(plan)
                 .createdAt(LocalDateTime.now())
                 .build();
 

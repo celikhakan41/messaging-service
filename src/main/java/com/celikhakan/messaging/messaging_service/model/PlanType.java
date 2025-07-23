@@ -1,6 +1,9 @@
 package com.celikhakan.messaging.messaging_service.model;
 
 
+import lombok.Getter;
+
+@Getter
 public enum PlanType {
     FREE(50),
     PRO(1000),
@@ -12,7 +15,4 @@ public enum PlanType {
         this.dailyMessageLimit = dailyMessageLimit;
     }
 
-    public int getDailyMessageLimit() {
-        return dailyMessageLimit;
-    }
 }

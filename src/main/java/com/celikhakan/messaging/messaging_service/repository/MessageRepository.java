@@ -7,9 +7,17 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 public interface MessageRepository extends MongoRepository<Message, String> {
-    List<Message> findBySenderAndReceiverOrReceiverAndSenderOrderByTimestampAsc(
-            String sender1, String receiver1, String sender2, String receiver2
+    /**
+     * Retrieves messages between two users within the same tenant, ordered by timestamp asc.
+     */
+    List<Message> findByTenantIdAndSenderAndReceiverOrTenantIdAndReceiverAndSenderOrderByTimestampAsc(
+            String tenantId1, String sender1, String receiver1,
+            String tenantId2, String sender2, String receiver2
     );
 
-    long countBySenderAndTimestampBetween(String sender, LocalDateTime start, LocalDateTime end);
+    /**
+     * Counts messages sent by a user within a tenant in the given time window.
+     */
+    long countByTenantIdAndSenderAndTimestampBetween(String tenantId, String sender,
+                                                   LocalDateTime start, LocalDateTime end);
 }

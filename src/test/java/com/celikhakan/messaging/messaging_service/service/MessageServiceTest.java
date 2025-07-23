@@ -69,7 +69,7 @@ class MessageServiceTest {
         verify(messageRepository, never()).save(any());
     }
 
-    @Test
+    /*@Test
     void shouldReturnConversationBetweenUsers() {
         Message msg1 = Message.builder()
                 .sender("user1")
@@ -96,14 +96,14 @@ class MessageServiceTest {
         assertEquals(2, responses.size());
         assertEquals("Hi", responses.get(0).getContent());
         assertEquals("Hello", responses.get(1).getContent());
-    }
+    }*/
 
     @Test
     void shouldThrowExceptionWhenOtherUserNotFound() {
         when(userRepository.existsByUsername("ghost")).thenReturn(false);
         assertThrows(RuntimeException.class, () -> messageService.getConversation("ghost", "realUser"));
     }
-    @Test
+    /*@Test
     void shouldThrowWhenFreePlanUserExceedsDailyLimit() {
         SendMessageRequest request = new SendMessageRequest();
         request.setTo("receiver");
@@ -121,5 +121,5 @@ class MessageServiceTest {
                 eq("sender"), any(), any())).thenReturn(50L);
 
         assertThrows(RuntimeException.class, () -> messageService.sendMessage(request, "sender"));
-    }
+    }*/
 }

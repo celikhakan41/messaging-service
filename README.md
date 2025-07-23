@@ -77,7 +77,16 @@ Services started:
 | POST   | `/api/messages/send`         | Send a message to another user     |
 | GET    | `/api/messages/history?with=username` | Get chat history with a user        |
 
-> All message endpoints require `Authorization: Bearer <JWT>` header.
+> All message endpoints require `Authorization: Bearer <JWT>` or `X-API-KEY` header.
+
+### 🏷️ Tenant
+
+| Method | Endpoint           | Description                                             |
+|--------|--------------------|---------------------------------------------------------|
+| GET    | `/api/tenant`      | Get current tenant configuration                        |
+| PUT    | `/api/tenant/plan` | Update subscription plan of current tenant (body: JSON) |
+
+> Tenant endpoints require `Authorization: Bearer <JWT>` or `X-API-KEY` header.
 
 ---
 

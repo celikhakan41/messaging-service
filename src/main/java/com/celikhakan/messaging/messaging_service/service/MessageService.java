@@ -6,6 +6,7 @@ import com.celikhakan.messaging.messaging_service.model.Message;
 import com.celikhakan.messaging.messaging_service.model.PlanType;
 import com.celikhakan.messaging.messaging_service.model.User;
 import com.celikhakan.messaging.messaging_service.repository.MessageRepository;
+import com.celikhakan.messaging.messaging_service.config.AuthContext;
 import com.celikhakan.messaging.messaging_service.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
@@ -33,13 +34,14 @@ public class MessageService {
         User senderUser = getUserByUsername(sender);
 
         if (PlanType.FREE.equals(senderUser.getPlanType())) {
-            long todayMessageCount = messageRepository.countBySenderAndTimestampBetween(
+            String tenantId = senderUser.getTenantId();
+            long todayMessageCount = messageRepository.countByTenantIdAndSenderAndTimestampBetween(
+                    tenantId,
                     sender,
                     LocalDate.now(CLOCK).atStartOfDay(),
                     LocalDateTime.now(CLOCK)
             );
-            PlanType planType = senderUser.getPlanType();
-            if (todayMessageCount >= planType.getDailyMessageLimit()) {
+            if (todayMessageCount >= senderUser.getPlanType().getDailyMessageLimit()) {
                 logger.warn("User '{}' has exceeded daily free plan message limit.", sender);
                 throw new RuntimeException("Daily message limit exceeded for FREE plan.");
             }
@@ -55,8 +57,11 @@ public class MessageService {
     public List<MessageResponse> getConversation(String username, String currentUser) {
         validateReceiverExists(username);
 
-        List<Message> messages = messageRepository.findBySenderAndReceiverOrReceiverAndSenderOrderByTimestampAsc(
-                currentUser, username, username, currentUser
+        String tenantId = AuthContext.getTenantId()
+                .orElseThrow(() -> new IllegalStateException("Tenant context not found"));
+        List<Message> messages = messageRepository.findByTenantIdAndSenderAndReceiverOrTenantIdAndReceiverAndSenderOrderByTimestampAsc(
+                tenantId, currentUser, username,
+                tenantId, username, currentUser
         );
 
         logger.info("{} retrieved conversation with {}", currentUser, username);
