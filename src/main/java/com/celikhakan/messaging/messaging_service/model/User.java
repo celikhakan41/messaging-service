@@ -25,7 +25,7 @@ public class User implements UserDetails {
     private String username;
     private String password;
     private String tenantId;
-    private PlanType planType;
+    // Subscription plan is now managed via Tenant
     private LocalDateTime createdAt;
 
     @Builder.Default

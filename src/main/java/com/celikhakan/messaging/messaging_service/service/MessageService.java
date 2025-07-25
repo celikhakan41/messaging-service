@@ -8,6 +8,7 @@ import com.celikhakan.messaging.messaging_service.model.User;
 import com.celikhakan.messaging.messaging_service.repository.MessageRepository;
 import com.celikhakan.messaging.messaging_service.config.AuthContext;
 import com.celikhakan.messaging.messaging_service.repository.UserRepository;
+import com.celikhakan.messaging.messaging_service.service.TenantService;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,22 +29,24 @@ public class MessageService {
 
     private final MessageRepository messageRepository;
     private final UserRepository userRepository;
+    private final TenantService tenantService;
 
     public MessageResponse sendMessage(SendMessageRequest request, String sender) {
         validateReceiverExists(request.getTo());
         User senderUser = getUserByUsername(sender);
 
-        if (PlanType.FREE.equals(senderUser.getPlanType())) {
-            String tenantId = senderUser.getTenantId();
+        String tenantId = senderUser.getTenantId();
+        PlanType planType = tenantService.getTenant(tenantId).getPlanType();
+        if (PlanType.FREE.equals(planType)) {
             long todayMessageCount = messageRepository.countByTenantIdAndSenderAndTimestampBetween(
                     tenantId,
                     sender,
                     LocalDate.now(CLOCK).atStartOfDay(),
                     LocalDateTime.now(CLOCK)
             );
-            if (todayMessageCount >= senderUser.getPlanType().getDailyMessageLimit()) {
-                logger.warn("User '{}' has exceeded daily free plan message limit.", sender);
-                throw new RuntimeException("Daily message limit exceeded for FREE plan.");
+            if (todayMessageCount >= planType.getDailyMessageLimit()) {
+                logger.warn("User '{}' has exceeded daily {} plan message limit.", sender, planType);
+                throw new RuntimeException("Daily message limit exceeded for " + planType + " plan.");
             }
         }
 

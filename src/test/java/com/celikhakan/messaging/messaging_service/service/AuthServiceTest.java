@@ -77,7 +77,6 @@ class AuthServiceTest {
                 .username("user")
                 .password("encoded-secret")
                 .tenantId("tenant1")
-                .planType(PlanType.FREE)
                 .createdAt(LocalDateTime.now())
                 .build();
 
@@ -103,7 +102,6 @@ class AuthServiceTest {
                 .username("user")
                 .password("encoded-secret")
                 .tenantId("tenant1")
-                .planType(PlanType.FREE)
                 .createdAt(LocalDateTime.now())
                 .build();
 

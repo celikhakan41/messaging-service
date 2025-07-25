@@ -40,13 +40,12 @@ public class AuthService {
                 .username(request.getUsername())
                 .password(passwordEncoder.encode(request.getPassword()))
                 .tenantId(tenantId)
-                .planType(plan)
                 .createdAt(LocalDateTime.now())
                 .build();
 
         userRepository.save(user);
         logger.info("User registered: {}", user.getUsername());
-        String token = jwtService.generateToken(user.getUsername(), user.getTenantId(), user.getPlanType());
+        String token = jwtService.generateToken(user.getUsername(), user.getTenantId(), plan);
         return new AuthResponse(token);
     }
 
@@ -62,7 +61,8 @@ public class AuthService {
             throw new RuntimeException("Invalid credentials");
         }
 
-        String token = jwtService.generateToken(user.getUsername(), user.getTenantId(), user.getPlanType());
+        PlanType plan = tenantService.getTenant(user.getTenantId()).getPlanType();
+        String token = jwtService.generateToken(user.getUsername(), user.getTenantId(), plan);
         return new AuthResponse(token);
     }
 }

@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.Clock;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 /**
@@ -59,5 +60,20 @@ public class TenantService {
         Tenant saved = tenantRepository.save(updated);
         logger.info("Updated tenant {} plan to {}", tenantId, newPlan);
         return saved;
+    }
+
+    /**
+     * Deletes the tenant with the given identifier.
+     */
+    public void deleteTenant(String tenantId) {
+        tenantRepository.deleteById(tenantId);
+        logger.info("Deleted tenant {}", tenantId);
+    }
+
+    /**
+     * Lists all tenants.
+     */
+    public List<Tenant> listTenants() {
+        return tenantRepository.findAll();
     }
 }

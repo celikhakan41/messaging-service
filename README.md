@@ -14,6 +14,7 @@ A simple, secure messaging API built with Spring Boot, MongoDB, and JWT authenti
 - ✅ Centralized logging with ELK (Elasticsearch, Logstash, Kibana)
 - ✅ Docker Compose for full environment setup
 - ✅ Unit & Integration tests with JUnit 5 and MockMvc
+- ⚡ Rate limiting per tenant (requests/minute) based on subscription plan
 
 ---
 

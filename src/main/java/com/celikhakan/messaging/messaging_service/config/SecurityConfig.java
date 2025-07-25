@@ -4,6 +4,7 @@ import com.celikhakan.messaging.messaging_service.service.JwtService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import com.celikhakan.messaging.messaging_service.filter.ApiKeyAuthFilter;
+import com.celikhakan.messaging.messaging_service.filter.RateLimitFilter;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -17,10 +18,14 @@ public class SecurityConfig {
 
     private final JwtAuthFilter jwtAuthFilter;
     private final ApiKeyAuthFilter apiKeyAuthFilter;
+    private final RateLimitFilter rateLimitFilter;
 
-    public SecurityConfig(JwtAuthFilter jwtAuthFilter, ApiKeyAuthFilter apiKeyAuthFilter) {
+    public SecurityConfig(JwtAuthFilter jwtAuthFilter,
+                          ApiKeyAuthFilter apiKeyAuthFilter,
+                          RateLimitFilter rateLimitFilter) {
         this.jwtAuthFilter = jwtAuthFilter;
         this.apiKeyAuthFilter = apiKeyAuthFilter;
+        this.rateLimitFilter = rateLimitFilter;
     }
 
     @Bean
@@ -35,7 +40,8 @@ public class SecurityConfig {
                 )
                 // JWT filter'ı önce çalıştır, sonra API Key filter'ı
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
-                .addFilterAfter(apiKeyAuthFilter, JwtAuthFilter.class);
+                .addFilterAfter(apiKeyAuthFilter, JwtAuthFilter.class)
+                .addFilterAfter(rateLimitFilter, ApiKeyAuthFilter.class);
 
         return http.build();
     }
